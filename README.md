@@ -32,7 +32,7 @@ def registrar_log(nivel: str, mensaje: str):
             f.write(linea)
     except IOError as e:
         # Si no podemos escribir el log, al menos lo mostramos en pantalla
-        print(f"⚠️  No se pudo escribir en el log: {e}")
+        print(f"  No se pudo escribir en el log: {e}")
     print(linea.strip())  # También imprimimos en consola
 
 
