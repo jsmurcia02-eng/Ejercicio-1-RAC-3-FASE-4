@@ -520,3 +520,227 @@ class Reserva(EntidadSistema):
                 self._horas > 0 and
                 self._personas > 0)
 
+
+# ─────────────────────────────────────────────────────────────
+# SECCIÓN 7: SISTEMA PRINCIPAL (gestiona listas de objetos)
+# ─────────────────────────────────────────────────────────────
+
+class SistemaGestion:
+    """
+    Controlador principal. Gestiona clientes, servicios y reservas
+    mediante listas internas de objetos (sin base de datos).
+    """
+
+    def __init__(self):
+        self._clientes: list[Cliente] = []
+        self._servicios: list[Servicio] = []
+        self._reservas: list[Reserva] = []
+        registrar_log("INFO", "=== Sistema Software FJ iniciado ===")
+
+    # ── GESTIÓN DE CLIENTES ──
+
+    def registrar_cliente(self, nombre, email, telefono, cedula) -> Cliente | None:
+        """Registra un cliente con manejo de excepciones."""
+        try:
+            cliente = Cliente(nombre, email, telefono, cedula)
+            if not cliente.validar():
+                raise ClienteInvalidoError("El cliente no pasó la validación.", codigo=104)
+            self._clientes.append(cliente)
+            registrar_log("INFO", f"Cliente registrado: {cliente.describir()}")
+            return cliente
+        except ClienteInvalidoError as e:
+            registrar_log("ERROR", f"Error al registrar cliente '{nombre}': {e}")
+            return None
+        except SoftwareFJError as e:
+            registrar_log("ERROR", f"Error general al registrar cliente: {e}")
+            return None
+
+    def buscar_cliente(self, cedula: str) -> Cliente | None:
+        """Busca un cliente por cédula. Retorna None si no existe."""
+        for c in self._clientes:
+            if c.cedula == cedula:
+                return c
+        return None
+
+    # ── GESTIÓN DE SERVICIOS ──
+
+    def agregar_servicio(self, servicio: Servicio) -> bool:
+        """Añade un servicio al catálogo."""
+        try:
+            if not isinstance(servicio, Servicio):
+                raise ServicioNoDisponibleError("Objeto de servicio inválido.", codigo=206)
+            self._servicios.append(servicio)
+            registrar_log("INFO", f"Servicio añadido: {servicio.describir()}")
+            return True
+        except ServicioNoDisponibleError as e:
+            registrar_log("ERROR", f"No se pudo agregar el servicio: {e}")
+            return False
+
+    def buscar_servicio(self, nombre: str) -> Servicio | None:
+        """Busca un servicio por nombre (insensible a mayúsculas)."""
+        nombre_lower = nombre.lower()
+        for s in self._servicios:
+            if nombre_lower in s.nombre.lower():
+                return s
+        return None
+
+    # ── GESTIÓN DE RESERVAS ──
+
+    def crear_reserva(self, cliente: Cliente, servicio: Servicio,
+                      horas: float, personas: int = 1,
+                      descuento: float = 0.0) -> Reserva | None:
+        """Crea y confirma una reserva con manejo completo de excepciones."""
+        try:
+            reserva = Reserva(cliente, servicio, horas, personas, descuento)
+            reserva.confirmar()
+            self._reservas.append(reserva)
+            return reserva
+        except ReservaInvalidaError as e:
+            registrar_log("ERROR", f"Reserva rechazada: {e}")
+            return None
+        except CapacidadExcedidaError as e:
+            registrar_log("ERROR", f"Capacidad excedida: {e}")
+            return None
+        except SoftwareFJError as e:
+            registrar_log("ERROR", f"Error al crear reserva: {e}")
+            return None
+
+    # ── REPORTES ──
+
+    def mostrar_reporte(self):
+        """Muestra un resumen completo del sistema."""
+        sep = "─" * 60
+        print(f"\n{'='*60}")
+        print("  📊 REPORTE DEL SISTEMA - SOFTWARE FJ")
+        print(f"{'='*60}")
+
+        print(f"\n👥 CLIENTES REGISTRADOS ({len(self._clientes)}):")
+        print(sep)
+        for c in self._clientes:
+            print(f"  {c.describir()}")
+
+        print(f"\n🛠️  SERVICIOS DISPONIBLES ({len(self._servicios)}):")
+        print(sep)
+        for s in self._servicios:
+            print(f"  {s.describir()}")
+
+        print(f"\n📋 RESERVAS ({len(self._reservas)}):")
+        print(sep)
+        total_ingresos = 0
+        for r in self._reservas:
+            print(f"  {r.describir()}")
+            if r._estado in ("confirmada", "completada"):
+                total_ingresos += r._costo_total
+
+        print(f"\n  💰 Total de ingresos potenciales: ${total_ingresos:,.2f}")
+        print(f"{'='*60}\n")
+
+
+# ─────────────────────────────────────────────────────────────
+# SECCIÓN 8: SIMULACIÓN DE 10+ OPERACIONES
+# ─────────────────────────────────────────────────────────────
+
+def ejecutar_simulacion():
+    """
+    Simula al menos 10 operaciones completas incluyendo
+    casos válidos e inválidos para demostrar el manejo de excepciones.
+    """
+    sistema = SistemaGestion()
+    print("\n" + "="*60)
+    print("  🚀 INICIANDO SIMULACIÓN - SOFTWARE FJ")
+    print("="*60)
+
+    # ── OPERACIÓN 1: Registrar clientes válidos ──
+    print("\n📌 OP 1 & 2: Registrar clientes válidos")
+    c1 = sistema.registrar_cliente("Ana Gómez", "ana@correo.com", "3101234567", "1010101010")
+    c2 = sistema.registrar_cliente("Carlos Ruiz", "carlos@empresa.co", "6017654321", "987654321")
+
+    # ── OPERACIÓN 2: Registrar cliente con datos inválidos ──
+    print("\n📌 OP 3: Registrar cliente con email inválido (debe fallar)")
+    c_malo1 = sistema.registrar_cliente("Pedro Malo", "emailsinArroba", "3009999999", "12345678")
+
+    # ── OPERACIÓN 3: Registrar cliente con cédula inválida ──
+    print("\n📌 OP 4: Registrar cliente con cédula inválida (debe fallar)")
+    c_malo2 = sistema.registrar_cliente("Luisa Falla", "luisa@mail.com", "3109876543", "abc")
+
+    # ── OPERACIÓN 4: Crear servicios válidos ──
+    print("\n📌 OP 5: Crear servicios del catálogo")
+    sala_a   = ReservaSala("Sala Innovación", capacidad_max=20, precio_hora=150_000)
+    laptop   = AlquilerEquipo("Laptop Dell i7", precio_dia=50_000, unidades_disponibles=5)
+    asesoria = AsesoriaEspecializada("Consultoría Cloud", precio_base_hora=200_000, nivel_asesor="senior")
+
+    sistema.agregar_servicio(sala_a)
+    sistema.agregar_servicio(laptop)
+    sistema.agregar_servicio(asesoria)
+
+    # ── OPERACIÓN 5: Crear servicio con parámetros inválidos ──
+    print("\n📌 OP 6: Crear servicio con precio negativo (debe fallar)")
+    try:
+        servicio_malo = ReservaSala("Sala Inválida", 10, precio_hora=-5000)
+        sistema.agregar_servicio(servicio_malo)
+    except ServicioNoDisponibleError as e:
+        registrar_log("ERROR", f"Servicio inválido rechazado: {e}")
+
+    # ── OPERACIÓN 6: Crear asesoría con nivel inválido ──
+    print("\n📌 OP 7: Crear asesoría con nivel inexistente (debe fallar)")
+    try:
+        asesoria_mala = AsesoriaEspecializada("Asesoría X", 100_000, "dios")
+        sistema.agregar_servicio(asesoria_mala)
+    except ServicioNoDisponibleError as e:
+        registrar_log("ERROR", f"Nivel de asesor inválido: {e}")
+
+    # ── OPERACIÓN 7: Reserva exitosa ──
+    print("\n📌 OP 8: Reserva exitosa - sala por 3 horas")
+    if c1 and sala_a:
+        r1 = sistema.crear_reserva(c1, sala_a, horas=3, personas=10, descuento=0.05)
+
+    # ── OPERACIÓN 8: Reserva con capacidad excedida ──
+    print("\n📌 OP 9: Reserva con demasiadas personas (debe fallar)")
+    if c2 and sala_a:
+        r2 = sistema.crear_reserva(c2, sala_a, horas=2, personas=50)
+
+    # ── OPERACIÓN 9: Reserva de equipo exitosa ──
+    print("\n📌 OP 10: Reserva de laptops exitosa")
+    if c1 and laptop:
+        r3 = sistema.crear_reserva(c1, laptop, horas=8, personas=3, descuento=0.0)
+
+    # ── OPERACIÓN 10: Reserva de servicio deshabilitado ──
+    print("\n📌 OP 11: Reserva de servicio deshabilitado (debe fallar)")
+    sala_a.disponible = False
+    if c2 and sala_a:
+        r_fallida = sistema.crear_reserva(c2, sala_a, horas=1, personas=5)
+    sala_a.disponible = True  # Rehabilitamos
+
+    # ── OPERACIÓN 11: Procesar pago exitoso ──
+    print("\n📌 OP 12: Procesar pago de reserva confirmada")
+    if r1 and r1._estado == "confirmada":
+        try:
+            cambio = r1.procesar_pago(1_000_000)
+            print(f"  ✅ Pago procesado. Cambio devuelto: ${cambio:,.2f}")
+        except PagoInsuficienteError as e:
+            print(f"  ❌ {e}")
+
+    # ── OPERACIÓN 12: Pago insuficiente ──
+    print("\n📌 OP 13: Pago insuficiente (debe fallar)")
+    if r3 and r3._estado == "confirmada":
+        try:
+            r3.procesar_pago(100)  # Monto muy bajo
+        except PagoInsuficienteError as e:
+            print(f"  ❌ Error esperado: {e}")
+
+    # ── OPERACIÓN 13: Cancelar una reserva ──
+    print("\n📌 OP 14: Cancelar reserva de laptops")
+    if r3 and r3._estado == "confirmada":
+        try:
+            r3.cancelar("Cliente solicitó cancelación por cambio de fecha")
+        except ReservaInvalidaError as e:
+            print(f"  ❌ {e}")
+
+    # ── OPERACIÓN 14: Asesoría grupal con descuento automático ──
+    print("\n📌 OP 15: Asesoría grupal con descuento automático")
+    if c2 and asesoria:
+        r4 = sistema.crear_reserva(c2, asesoria, horas=2, personas=5, descuento=0.10)
+
+    # ── REPORTE FINAL ──
+    sistema.mostrar_reporte()
+    print(f"\n📄 Todos los eventos han sido registrados en: {LOG_FILE}")
