@@ -304,7 +304,7 @@ class ReservaSala(Servicio):
 
     def describir(self) -> str:
         estado = "Disponible" if self._disponible else "No disponible"
-        return (f"🏢 Sala: {self._nombre} | Capacidad: {self._capacidad_max} pax "
+        return (f" Sala: {self._nombre} | Capacidad: {self._capacidad_max} pax "
                 f"| ${self._precio_base:,.0f}/hora | {estado}")
 
 
@@ -341,7 +341,7 @@ class AlquilerEquipo(Servicio):
 
     def describir(self) -> str:
         estado = "Disponible" if self._disponible else "No disponible"
-        return (f"💻 Equipo: {self._nombre} | Stock: {self._unidades_disponibles} "
+        return (f" Equipo: {self._nombre} | Stock: {self._unidades_disponibles} "
                 f"| ${self._precio_base:,.0f}/hora/unidad | {estado}")
 
 
@@ -379,7 +379,7 @@ class AsesoriaEspecializada(Servicio):
 
     def describir(self) -> str:
         estado = "Disponible" if self._disponible else "No disponible"
-        return (f"👨‍💼 Asesoría: {self._nombre} | Nivel: {self._nivel.capitalize()} "
+        return (f" Asesoría: {self._nombre} | Nivel: {self._nivel.capitalize()} "
                 f"| ${self._precio_base:,.0f}/hora base | {estado}")
 
 
@@ -510,7 +510,7 @@ class Reserva(EntidadSistema):
             registrar_log("INFO", f"Proceso de pago finalizado para Reserva #{self._id}")
 
     def describir(self) -> str:
-        return (f"📋 Reserva #{self._id} | {self._cliente.nombre} → {self._servicio.nombre} "
+        return (f" Reserva #{self._id} | {self._cliente.nombre} → {self._servicio.nombre} "
                 f"| {self._horas}h | {self._personas} persona(s) "
                 f"| Estado: {self._estado.upper()} | Total: ${self._costo_total:,.2f}")
 
@@ -611,20 +611,20 @@ class SistemaGestion:
         """Muestra un resumen completo del sistema."""
         sep = "─" * 60
         print(f"\n{'='*60}")
-        print("  📊 REPORTE DEL SISTEMA - SOFTWARE FJ")
+        print("   REPORTE DEL SISTEMA - SOFTWARE FJ")
         print(f"{'='*60}")
 
-        print(f"\n👥 CLIENTES REGISTRADOS ({len(self._clientes)}):")
+        print(f"\n CLIENTES REGISTRADOS ({len(self._clientes)}):")
         print(sep)
         for c in self._clientes:
             print(f"  {c.describir()}")
 
-        print(f"\n🛠️  SERVICIOS DISPONIBLES ({len(self._servicios)}):")
+        print(f"\n  SERVICIOS DISPONIBLES ({len(self._servicios)}):")
         print(sep)
         for s in self._servicios:
             print(f"  {s.describir()}")
 
-        print(f"\n📋 RESERVAS ({len(self._reservas)}):")
+        print(f"\n RESERVAS ({len(self._reservas)}):")
         print(sep)
         total_ingresos = 0
         for r in self._reservas:
@@ -632,7 +632,7 @@ class SistemaGestion:
             if r._estado in ("confirmada", "completada"):
                 total_ingresos += r._costo_total
 
-        print(f"\n  💰 Total de ingresos potenciales: ${total_ingresos:,.2f}")
+        print(f"\n   Total de ingresos potenciales: ${total_ingresos:,.2f}")
         print(f"{'='*60}\n")
 
 
@@ -743,7 +743,7 @@ def ejecutar_simulacion():
 
     # ── REPORTE FINAL ──
     sistema.mostrar_reporte()
-    print(f"\n📄 Todos los eventos han sido registrados en: {LOG_FILE}")
+    print(f"\n Todos los eventos han sido registrados en: {LOG_FILE}")
 
 
 # ─────────────────────────────────────────────────────────────
